@@ -35,12 +35,22 @@ import XLSX from 'xlsx';
 export default {
   name: 'FileLinks',
   setup() {
+    const generateRandomJWT = () => {
+      // Generate a random string to use as a JWT token
+      return Math.random().toString(36).substring(2);
+    };
     const fileLinks = ref(null);
     const excelContent = ref(null);
     const backendUrl = 'http://localhost:8080'; // Base URL for your Spring Boot backend
+    const jwtToken = generateRandomJWT();
 
     onMounted(() => {
-      axios.get(`${backendUrl}/api/files`)
+      console.log("Generated JWT Token (vue frontend):", jwtToken);
+      axios.get(`${backendUrl}/api/files`, {
+        headers: {
+          'Authorization': `Bearer ${jwtToken}`
+        }
+      })
         .then(response => {
           fileLinks.value = response.data;
         })
@@ -51,7 +61,10 @@ export default {
 
     const viewExcelFile = () => {
       axios.get(`${backendUrl}${fileLinks.value.excelLink}`, {
-        responseType: 'arraybuffer'
+        responseType: 'arraybuffer',
+        headers: {
+          'Authorization': `Bearer ${jwtToken}`
+        }
       }).then(response => {
         const data = new Uint8Array(response.data);
         const workbook = XLSX.read(data, { type: 'array' });
