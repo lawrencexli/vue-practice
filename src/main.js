@@ -1,15 +1,5 @@
-import { createApp } from 'vue'
-import './style.css'
-import App from './App.vue'
-import { createPinia } from 'pinia';
-import { create, NButton } from 'naive-ui';
+import { createApp } from 'vue';
+import App from './App.vue';
+import './style.css';
 
-const app = createApp(App);
-const pinia = createPinia();
-const naive = create({
-    components: [NButton]
-});
-
-app.use(pinia);
-app.use(naive);
-app.mount('#app');
+createApp(App).mount('#app');
