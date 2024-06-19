@@ -29,7 +29,6 @@
 
 <script>
 import { ref, onMounted } from 'vue';
-import axios from 'axios';
 import XLSX from 'xlsx';
 
 export default {
@@ -45,41 +44,47 @@ export default {
     const jwtToken = generateRandomJWT();
 
     onMounted(() => {
-      console.log("Generated JWT Token (vue frontend):", jwtToken);
-      axios.get(`${backendUrl}/api/files`, {
-        headers: {
-          'Authorization': `Bearer ${jwtToken}`
-        }
-      })
-        .then(response => {
-          fileLinks.value = response.data;
-        })
-        .catch(error => {
-          console.error('Error fetching file links:', error);
-        });
+		console.log("Generated JWT Token (vue frontend):", jwtToken);
+		uni.request({
+			url: `${backendUrl}/api/files`,
+			method: 'GET',
+			header: {
+				'Authorization': `Bearer ${jwtToken}`
+			},
+			success: (response) => {
+				fileLinks.value = response.data;
+			},
+			fail: (error) => {
+				console.error('Error fetching file links:', error);
+			}
+		});
     });
 
     const viewExcelFile = () => {
-      axios.get(`${backendUrl}${fileLinks.value.excelLink}`, {
-        responseType: 'arraybuffer',
-        headers: {
-          'Authorization': `Bearer ${jwtToken}`
-        }
-      }).then(response => {
-        const data = new Uint8Array(response.data);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const firstSheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[firstSheetName];
-        const jsonSheet = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
-        // Parse headers and rows
-        const headers = jsonSheet[0];
-        const rows = jsonSheet.slice(1);
-
-        excelContent.value = { headers, rows };
-      }).catch(error => {
-        console.error('Error fetching or parsing Excel file:', error);
-      });
+		uni.request({
+            url: `${backendUrl}${fileLinks.value.excelLink}`,
+            method: 'GET',
+            header: {
+				'Authorization': `Bearer ${jwtToken}`
+            },
+            responseType: 'arraybuffer',
+            success: (response) => {
+				const data = new Uint8Array(response.data);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                const jsonSheet = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+      
+                // Parse headers and rows
+                const headers = jsonSheet[0];
+                const rows = jsonSheet.slice(1);
+      
+                excelContent.value = { headers, rows };
+            },
+            fail: (error) => {
+                console.error('Error fetching or parsing Excel file:', error);
+            }
+        });
     };
 
     return {
